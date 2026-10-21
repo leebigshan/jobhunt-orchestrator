@@ -1,0 +1,38 @@
+# Boss 求职辅助 —— 配置文件（示例）
+# 复制为 config.yaml 并填写你的信息，或直接编辑本文件后另存为 config.yaml。
+
+user:
+  name: "张三"
+  base_resume_path: "data/base_resume.md"   # 简历优化时读取的基础简历（Markdown）
+
+search:
+  keywords: ["Python", "LLM", "Agent"]       # 求职关键词
+  salary_min: 10000                          # 期望薪资下限（元/月），评估据此判断达标
+  target_roles: ["后端开发", "大模型应用"]    # 命中标题则高加分
+  skills_required: ["Python", "Java", "LLM"] # 必须具备的技能
+  skills_bonus: ["LangGraph", "RAG", "FastAPI"] # 加分技能
+  exclude_keywords: ["外包", "驻场", "培训", "销售"] # 命中则判定不建议
+  boost_keywords: ["大模型", "AIGC", "Agent"]     # 命中加分
+  filter_score_threshold: 65
+
+scoring:
+  engine: "local"                # local(纯本地规则，0 token) | llm | hybrid
+  weights:
+    target_role: 30
+    skill_required: 10
+    skill_bonus: 5
+    boost: 10
+  caps:
+    skill_required: 40
+    skill_bonus: 25
+    title_penalty: 45
+
+llm:
+  provider: "openai_compatible"  # claude | openai | openai_compatible | ollama
+  base_url: "https://api.openai.com/v1"
+  api_key_env: "LLM_API_KEY"     # 从环境变量读取
+  model: "gpt-4o-mini"
+  max_tokens: 1024
+  temperature: 0.2
+  chat_model: "gpt-4o-mini"      # AI 代聊/话术模型
+  chat_max_tokens: 512

@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "Boss 求职辅助",
+  "version": "3.4.1",
+  "description": "在 Boss 直聘职位详情页右侧打开常驻侧边栏：提取职位→核对/修改→确认后分析；匹配度评估、深度分析、面试准备计划、岗位速览、面试预测、简历优化（支持上传 Markdown 简历）、打招呼/HR话术，全部走后端 LLM，结果 Markdown 富文本渲染、一键复制与收藏。",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "bossassist@local.dev",
+      "strict_min_version": "121.0"
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*"
+  ],
+  "action": {
+    "default_title": "Boss 求职辅助（右侧侧边栏）",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.zhipin.com/*"],
+      "js": ["md.js", "content_script.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png",
+    "128": "icons/icon128.png"
+  }
+}
