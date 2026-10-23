@@ -87,6 +87,11 @@ python launch.py          # 默认 http://127.0.0.1:8000
 - **↻ 刷新 / ↻ 重新加载**：面板顶部「↻ 刷新」或职位卡「↻ 重新加载」重读当前页职位信息（切职位不用关面板）。
 - **🗂 卡片折叠**：点任意卡片标题（▾/▸）折叠/展开该卡片；**点功能按钮出结果时，职位信息/我的简历/功能三张卡自动折叠、结果卡自动展开并滚动到位**，结果永远在眼前；折叠状态存 `bossassist_folded`。
 - **⚙ 模块管理**：功能区标题栏「⚙ 模块管理」→ 勾选开关，关掉不需要的功能按钮/卡片（如不用谈薪就关「谈薪策略」）；配置存 `bossassist_modules`，随时可恢复。
+- **🗂 管理页**：侧边栏顶部「🗂 管理页」按钮 → 打开独立标签页管理中枢（Chrome / Firefox 通用，`options_ui.open_in_tab`）：概览统计 / 职位管理 / 申请记录 / 设置，数据落本地 SQLite（`data/jobtrack.db`）（v3.5.0）。
+- **☁ 数据同步**：浏览 / 分析 / 收藏事件静默同步到管理页；后端没起时本地排队（`bossassist_outbox`，≤500 条丢最旧），下次开面板或管理页自动补传——绝不弹错、绝不重试风暴。注意：取消收藏只上报事件、不回写本地历史（用户删除不可复活）。「⚙ 模块管理 → 数据同步」可整组关闭（关后只写本地历史）（v3.5.0）。
+- **📌 求职行动闭环（v3.6.0）**：跟进提醒——非终态申请 ≥7 天无新动态 → 概览「⏳ 待跟进」计数 + 申请卡「⏳ 停滞 N 天」徽标 +「📌 记录跟进」按钮（写一条备注事件即重置停滞时钟）；求职周报——顶部「📊 周报」按钮下载近 7 天 Markdown 复盘（本周动态 / 漏斗现状 / 待跟进 / 时间线 / 下周建议）；简历导出——设置页简历卡「导出MD / 打印版HTML」（HTML 可直接打印投递）。
+- **🧩 JD 关键词缺口 + 💰 薪酬对比（v3.7.0）**：侧边栏新增「🎯 关键词缺口」按钮——JD 与简历对照出「⚠️ 简历缺口 / ✅ 已覆盖 / 💡 简历亮点」（本地规则 0 token）；管理页职位详情「🎯 算一下关键词缺口」即时对照；概览新增「💰 薪酬区间对比」横向条形卡（近 30 天浏览 + 收藏职位，解析 `15k-25k`/`25-40K·14薪`/`1-2万`，面议自动剔除）；设置页「🎯 技能词典」一行一词可编辑（内置 ~75 词 + 自定义）。
+- **🎨 现代简约 UI 重构（v3.8.0）**：管理页与侧边栏统一一套 Design Token（白底 / 圆角 12px / 双层柔和阴影 / 微交互）；侧边栏 13 个功能按钮按「一键&评估 / 深度分析 / 求职动作」分组可折叠（点组标题展开/收起，折叠状态存 `bossassist_ctrl_groups`，独立于「⚙ 模块管理」的显隐开关）；管理页概览卡加图标 + 强调色、卡片 hover 上浮；趋势图与评分分布图加网格线 + Y 轴刻度 + 悬停 tooltip（纯 SVG，保留评分分布点击筛选）。**本次纯视觉重构，不改动任何 `/ext` 接口与业务逻辑**。
 - **✕ 收起**：点侧边栏右上角关闭；再点工具栏图标重新打开。
 
 > 底部后端状态点显示连接情况。若提示「后端未连接」，先起后端（`python launch.py`）；若读不到职位，刷新一下详情页。
@@ -98,7 +103,7 @@ python launch.py          # 默认 http://127.0.0.1:8000
 1. `chrome://extensions` → 扩展卡片「🔄 刷新」
 2. 职位页 **F5**（旧标签页跑的还是旧脚本）
 
-核对面板底部**版本角标**（当前 `· v3.4.1`）——角标没变就是没更新成功，别当新 bug 报。
+核对面板底部**版本角标**（当前 `· v3.8.0`）——角标没变就是没更新成功，别当新 bug 报。
 
 ## 端点一览
 
@@ -119,6 +124,29 @@ python launch.py          # 默认 http://127.0.0.1:8000
 | `/ext/greeting` | POST | 打招呼语 |
 | `/ext/chat-tone` | POST | `JobPage + message` → HR 回复话术 |
 
+### 管理页 API（`/api/*`，v3.7.0；前端由 `store.js` 统一封装）
+
+| 端点 | 方法 | 说明 |
+| --- | --- | --- |
+| `/api/stats` | GET | 概览统计：总量 / 回复率 / 转化率 / 评分分布 / 趋势 / 最近动态 / 待跟进 `followups`（v3.6.0） |
+| `/api/jobs` | GET/POST | 职位列表（筛选/排序/分页）/ 手动新增 |
+| `/api/jobs/{id}` | GET/PATCH/DELETE | 职位详情（`{job,events,application}`）/ 改备注·归档 / 删除（级联） |
+| `/api/jobs/bulk` | POST | 批量收藏 / 归档 / 删除 |
+| `/api/events` | POST | 批量事件上报（≤500/批，`dedup_key` 去重；扩展采集专用） |
+| `/api/applications` | GET/POST | 申请记录列表 / 新建投递（重复 409） |
+| `/api/applications/{id}` | PATCH/DELETE | 推进状态（forward-only）/ 撤回（回 `viewed`） |
+| `/api/resumes` | GET/POST/DELETE | 管理页简历 CRUD |
+| `/api/resumes/{id}/export` | GET | 简历导出 `format=md\|html`（HTML 为独立可打印单页、全量转义防 XSS）（v3.6.0） |
+| `/api/report/weekly` | GET | 求职周报：近 7 天 Markdown 复盘（本周动态/漏斗现状/待跟进/时间线/下周建议）（v3.6.0） |
+| `/api/keyword-gap` | POST | JD 关键词缺口：`job_id`/`jd_text` × `resume_id`/`resume_text`/默认简历三源解析，返回 `matched/missing/extra/jd_found/resume_found`（0 token 本地规则，词典 `settings.kv.keywords` 可自定义）（v3.7.0） |
+| `/api/salary/compare` | GET | 薪酬区间对比：`days=N` 近 N 天浏览 + 收藏职位，`items`（`low_k/high_k/k14`，面议剔除、元兜底）+ `stats`（count/avg/min/max/median）+ `scale_max_k`（v3.7.0） |
+| `/api/settings` | GET/PUT | 设置读写（写回 `config.yaml`，自动 `.bak` 可回滚） |
+| `/api/export` | GET | 导出 JSON / CSV |
+| `/api/import` | POST | 导入旧版历史 / 备份 |
+| `/api/reset` | POST | 清空数据（需 `confirm:true`） |
+
+> 状态机：`viewed→applied→read→interview→offer|rejected` 只进不退（`applied→offer` 允许）；任意态可 `rejected` / `archived`。LLM key **永远不出** `/api` 响应（后端 `_strip_api_key` 剥离）。
+
 后端 LLM prompt 统一锁输出格式（长文端点固定 Markdown 小节名、每条要点 ≤40 字；评分端点纯 JSON；列表端点每行一条），前端 `md.js` 按小节逐节渲染，分析类全部融合 `base_resume`。
 
 `JobPage` 字段：`title/company/location/salary_range/jd_text/url/job_tags/interviewer/base_resume`（`base_resume` 为上传的 Markdown 简历，可选）。
@@ -127,8 +155,10 @@ python launch.py          # 默认 http://127.0.0.1:8000
 
 | 文件 | 职责 |
 | --- | --- |
-| `manifest.json` | MV3 清单（Chrome 111+ / Firefox 121+；无 default_popup） |
-| `background.js` | MV3 service worker：点图标切换侧边栏；代理 `/ext/*` 请求（绕页面 CORS） |
+| `manifest.json` | MV3 清单（Chrome 111+ / Firefox 121+；无 default_popup；`options_ui` → 管理页） |
+| `background.js` | MV3 service worker：点图标切换侧边栏；代理 `/ext/*` 请求（绕页面 CORS）；`OPEN_DASHBOARD` 打开管理页 |
+| `store.js` | 管理页数据层：`/api/*` 封装 + 本地历史兜底（`localJobs()`）+ 离线队列补传（`flushOutbox()`） |
+| `dashboard.html/css/js` | 🗂 管理页四模块（概览 / 职位管理 / 申请记录 / 设置，hash 路由，零构建外链脚本） |
 | `md.js` | Markdown 渲染器（`BOSSMD.render`，XSS 安全；先于 content_script 注入） |
 | `content_script.js` | 右侧常驻侧边栏（Shadow DOM）+ 就地读页 + 提取/确认表单 + 简历上传 + 各功能按钮 |
 | `md.test.js` | md.js 渲染回归测试（`node browser-extension/md.test.js`，含 XSS 拦截断言） |

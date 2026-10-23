@@ -233,8 +233,13 @@
   font-size: 13px;
   color: #1f2328;
   background: #fff;
-  box-shadow: -4px 0 18px rgba(0, 0, 0, .22);
+  box-shadow: -2px 0 10px rgba(16,24,40,.06), -8px 0 32px rgba(16,24,40,.10);
   animation: boss-assist-slide .18s ease-out;
+  --bg: #f7f8fa; --card: #fff; --border: #eef0f4; --muted: #8a93a2;
+  --primary: #3b6cf6; --primary-dark: #2f59d6; --primary-soft: #eef3ff;
+  --soft: #f5f7fb; --radius: 12px; --radius-sm: 8px; --ease: cubic-bezier(.4,0,.2,1);
+  --shadow-sm: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  --shadow-hover: 0 2px 4px rgba(16,24,40,.05), 0 10px 28px rgba(16,24,40,.10);
 }
 @keyframes boss-assist-slide {
   from { transform: translateX(28px); opacity: .3; }
@@ -244,10 +249,12 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
-  background: linear-gradient(135deg, #00c2ff, #2d7bff);
+  padding: 11px 12px;
+  background: linear-gradient(135deg, #4b7bf0, #3b6cf6);
   color: #fff;
   font-weight: 600;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  z-index: 2;
 }
 .header-actions { display: flex; gap: 4px; }
 header .ghost {
@@ -263,7 +270,8 @@ header .ghost:hover { background: rgba(255,255,255,.35); }
 
 .panel-body { flex: 1; overflow: auto; }
 
-.card { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; }
+.card { padding: 11px 12px; border-bottom: 1px solid var(--border); transition: background .15s var(--ease); }
+.card:hover { background: var(--soft); }
 .card.hidden, .hidden { display: none; }
 
 .job-line { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
@@ -280,23 +288,33 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
   margin-top: 6px; color: #444; font-size: 12px;
 }
 
-#controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #fafbfc; }
+#controls { display: flex; flex-direction: column; gap: 10px; padding: 10px 0; }
+.ctrl-group { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06); }
+.ctrl-group-head { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; user-select: none; padding: 2px 4px 7px; }
+.ctrl-group-head .cg-toggle { transition: transform .18s var(--ease); color: #c4c9d4; font-size: 11px; }
+.ctrl-group.folded .cg-toggle { transform: rotate(-90deg); }
+.ctrl-group.folded .ctrl-grid { display: none; }
+.ctrl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 #controls .primary {
-  border: none; border-radius: 8px; padding: 10px;
-  background: linear-gradient(135deg, #00c2ff, #2d7bff);
+  border: none; border-radius: var(--radius-sm); padding: 10px;
+  background: linear-gradient(135deg, #4b7bf0, #3b6cf6);
   color: #fff; font-size: 13px; font-weight: 500; cursor: pointer;
+  box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+  transition: transform .12s var(--ease), box-shadow .18s var(--ease), opacity .18s var(--ease);
 }
-#controls .primary:hover { opacity: .9; }
-#controls .primary:disabled { opacity: .5; cursor: not-allowed; }
+#controls .primary:hover { box-shadow: 0 2px 4px rgba(16,24,40,.05), 0 10px 28px rgba(16,24,40,.10); transform: translateY(-1px); }
+#controls .primary:active { transform: translateY(0); box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06); }
+#controls .primary:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 #controls .primary.accent { background: linear-gradient(135deg, #ff8a00, #ff5e3a); }
 
 .result-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
 .result-label { font-size: 12px; color: #666; font-weight: 600; flex: 1; }
 .ghost.small, button.small {
-  border: 1px solid #d0d7de; background: #fafafa; color: #57606a;
-  border-radius: 6px; cursor: pointer; font-size: 12px; padding: 2px 8px;
+  border: 1px solid var(--border); background: var(--soft); color: #57606a;
+  border-radius: var(--radius-sm); cursor: pointer; font-size: 12px; padding: 2px 8px;
+  transition: background .15s var(--ease), border-color .15s var(--ease);
 }
-.ghost.small:hover, button.small:hover { background: #f0f0f0; }
+.ghost.small:hover, button.small:hover { background: #eef0f4; border-color: #dde1e8; }
 
 .history-list { max-height: 220px; overflow: auto; }
 .history-item {
@@ -316,10 +334,10 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
   max-height: 46vh; overflow: auto;
   font-size: 12.5px; line-height: 1.7; word-break: break-word;
 }
-.result-body h2 { font-size: 15px; margin: 2px 0 8px; color: #0b3d91; }
+.result-body h2 { font-size: 15px; margin: 2px 0 8px; color: var(--primary-dark); }
 .result-body h3 {
-  font-size: 13px; margin: 12px 0 6px; color: #2d7bff;
-  border-left: 3px solid #2d7bff; padding-left: 6px;
+  font-size: 13px; margin: 12px 0 6px; color: var(--primary);
+  border-left: 3px solid var(--primary); padding-left: 6px;
 }
 .result-body h4 { font-size: 12.5px; margin: 8px 0 4px; color: #1f2328; }
 .result-body p { margin: 6px 0; }
@@ -338,10 +356,10 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
   padding: 6px 10px; border-radius: 0 6px 6px 0; margin: 8px 0;
 }
 .result-body table { border-collapse: collapse; margin: 8px 0; width: 100%; font-size: 12px; }
-.result-body th, .result-body td { border: 1px solid #d0d7de; padding: 4px 8px; text-align: left; }
-.result-body th { background: #eef2f7; }
-.result-body hr { border: none; border-top: 1px dashed #d0d7de; margin: 10px 0; }
-.result-body a { color: #2d7bff; text-decoration: none; }
+.result-body th, .result-body td { border: 1px solid var(--border); padding: 4px 8px; text-align: left; }
+.result-body th { background: var(--primary-soft); }
+.result-body hr { border: none; border-top: 1px dashed var(--border); margin: 10px 0; }
+.result-body a { color: var(--primary); text-decoration: none; }
 
 /* ---- 职位确认表单（提取 → 核对/修改 → 确认） ---- */
 .job-form { margin-top: 6px; }
@@ -377,12 +395,12 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
 
 /* ---- 模块管理（裁剪不需要的功能/卡片） ---- */
 .mod-panel {
-  margin-bottom: 6px; padding: 8px; border: 1px dashed #d0d7de;
-  border-radius: 6px; font-size: 11.5px; max-height: 220px; overflow: auto;
+  margin-bottom: 6px; padding: 8px; border: 1px dashed var(--border);
+  border-radius: var(--radius-sm); font-size: 11.5px; max-height: 220px; overflow: auto;
 }
-.mod-panel .mod-group { font-weight: 600; color: #888; margin: 4px 0 2px; }
+.mod-panel .mod-group { font-weight: 600; color: var(--muted); margin: 4px 0 2px; }
 .mod-panel label { display: flex; align-items: center; gap: 5px; padding: 2px 0; color: #444; cursor: pointer; }
-.mod-panel input { accent-color: #2d7bff; }
+.mod-panel input { accent-color: var(--primary); }
 .mod-off { display: none !important; }
 
 /* ---- 简历卡片 ---- */
@@ -391,8 +409,8 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
 
 .backend-status {
   display: flex; align-items: center; gap: 6px;
-  padding: 6px 12px; font-size: 12px; color: #666;
-  border-top: 1px solid #f0f0f0;
+  padding: 6px 12px; font-size: 12px; color: var(--muted);
+  border-top: 1px solid var(--border);
 }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; display: inline-block; }
 .dot.on { background: #34c759; }
@@ -408,6 +426,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
     <div class="header-actions">
       <button id="btn-settings" class="ghost" title="设置后端地址">&#9881;</button>
       <button id="btn-history" class="ghost" title="查看分析历史">&#128339;</button>
+      <button id="btn-open-dash" class="ghost" title="🗂 打开管理页（职位/申请/统计）">&#128450;&#65039;</button>
       <button id="btn-refresh" class="ghost" title="重新读取当前页">&#8635;</button>
       <button id="btn-close" class="ghost" title="收起侧边栏">&#10005;</button>
     </div>
@@ -455,23 +474,39 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
     <!-- 主功能按钮（确认职位信息后启用；⚙ 模块管理可裁剪不需要的功能） -->
     <section id="controls" class="card hidden">
       <div class="result-toolbar">
-        <span class="result-label">⚡ 功能（点标题折叠 · ⚙ 模块管理可关功能）</span>
+        <span class="result-label">⚡ 功能（⚙ 模块管理可关功能）</span>
         <button id="btn-mods" class="ghost small">⚙ 模块管理</button>
       </div>
       <div id="mod-panel" class="mod-panel hidden"></div>
-      <button id="btn-pack" class="primary accent">&#9889; 一键分析</button>
-      <button id="btn-assess" class="primary">&#128269; 评估职位</button>
-      <button id="btn-analysis" class="primary">&#128202; 深度分析</button>
-      <button id="btn-plan" class="primary">&#128218; 准备计划</button>
-      <button id="btn-company" class="primary">&#127970; 公司情报</button>
-      <button id="btn-salary" class="primary">&#128176; 谈薪策略</button>
-      <button id="btn-intro" class="primary">&#127908; 自我介绍</button>
-      <button id="btn-star" class="primary">&#11088; 项目讲稿</button>
-      <button id="btn-summary" class="primary">&#128203; 岗位速览</button>
-      <button id="btn-interview" class="primary">&#127919; 面试预测</button>
-      <button id="btn-optimize" class="primary">&#128196; 简历优化</button>
-      <button id="btn-greeting" class="primary">&#128172; 打招呼语</button>
-      <button id="btn-chat" class="primary">&#129504; HR 话术</button>
+      <div class="ctrl-group" data-group="g-quick">
+        <div class="ctrl-group-head"><span>一键 &amp; 评估</span><span class="cg-toggle">▾</span></div>
+        <div class="ctrl-grid">
+          <button id="btn-pack" class="primary accent">&#9889; 一键分析</button>
+          <button id="btn-assess" class="primary">&#128269; 评估职位</button>
+        </div>
+      </div>
+      <div class="ctrl-group" data-group="g-analysis">
+        <div class="ctrl-group-head"><span>深度分析</span><span class="cg-toggle">▾</span></div>
+        <div class="ctrl-grid">
+          <button id="btn-analysis" class="primary">&#128202; 深度分析</button>
+          <button id="btn-plan" class="primary">&#128218; 准备计划</button>
+          <button id="btn-company" class="primary">&#127970; 公司情报</button>
+          <button id="btn-summary" class="primary">&#128203; 岗位速览</button>
+          <button id="btn-interview" class="primary">&#127919; 面试预测</button>
+          <button id="btn-keygap" class="primary">&#129514; 关键词缺口</button>
+        </div>
+      </div>
+      <div class="ctrl-group" data-group="g-action">
+        <div class="ctrl-group-head"><span>求职动作</span><span class="cg-toggle">▾</span></div>
+        <div class="ctrl-grid">
+          <button id="btn-salary" class="primary">&#128176; 谈薪策略</button>
+          <button id="btn-intro" class="primary">&#127908; 自我介绍</button>
+          <button id="btn-star" class="primary">&#11088; 项目讲稿</button>
+          <button id="btn-optimize" class="primary">&#128196; 简历优化</button>
+          <button id="btn-greeting" class="primary">&#128172; 打招呼语</button>
+          <button id="btn-chat" class="primary">&#129504; HR 话术</button>
+        </div>
+      </div>
     </section>
 
     <!-- 结果区（含一键复制） -->
@@ -579,6 +614,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
       btnOptimize: $("btn-optimize"),
       btnGreeting: $("btn-greeting"),
       btnChat: $("btn-chat"),
+      btnKeyGap: $("btn-keygap"),
       btnCompany: $("btn-company"),
       btnSalary: $("btn-salary"),
       btnIntro: $("btn-intro"),
@@ -597,6 +633,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
     wireEvents();
     checkBackend();
     initFoldModules();
+    initFoldGroups();
     initRead();
     initResume();
     // 版本角标：一眼确认插件是否已更新（chrome.runtime.getManifest 只在新脚本里拿到新版本）
@@ -605,6 +642,9 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
       const ver = (chrome.runtime && chrome.runtime.getManifest && chrome.runtime.getManifest().version) || "?";
       if (vt) vt.textContent = " · v" + ver;
     } catch (_) { /* 忽略 */ }
+    // 「🗂 管理页」入口（plan/04 §3）：交给 background 打开 options 独立标签页
+    const dashBtn = sh.getElementById("btn-open-dash");
+    if (dashBtn) dashBtn.addEventListener("click", openDashboard);
   }
 
   function togglePanel(force) {
@@ -667,6 +707,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
     els.jobConfirm.classList.add("on");
     setJobHint("✓ 已确认 · 分析将使用上方内容；修改后直接再点功能按钮即可生效。", true);
     els.controls.classList.remove("hidden");
+    report("view", metaPayload(job)); // 采集点：确认后用表单值更新一次（view 不记 JD 全文）
     els.controls.scrollIntoView({ block: "nearest" });
   }
 
@@ -686,6 +727,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
       ["btn-intro", "自我介绍"], ["btn-star", "项目讲稿"], ["btn-summary", "岗位速览"],
       ["btn-interview", "面试预测"], ["btn-optimize", "简历优化"], ["btn-greeting", "打招呼语"],
       ["btn-chat", "HR 话术"],
+      ["btn-keygap", "关键词缺口"],
     ]],
   ];
   const FOLD_CARDS = ["job-card", "resume-card", "controls", "result", "history"];
@@ -722,6 +764,11 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
         parts.push(`<label><input type="checkbox" data-mod="${id}" ${hiddenSet.has(id) ? "" : "checked"}> ${label}</label>`);
       }
     }
+    // 「数据同步」开关（plan/04 §2）：默认开；隐藏列表含 sync = 关（report() 只写本地）
+    parts.push('<div class="mod-group">数据同步</div>');
+    parts.push(
+      `<label><input type="checkbox" id="mod-sync" ${hiddenSet.has(SYNC_MOD_ID) ? "" : "checked"}> 数据同步（浏览/分析/收藏上报到管理页）</label>`
+    );
     els.modPanel.innerHTML = parts.join("");
     els.modPanel.querySelectorAll("input[data-mod]").forEach((input) => {
       input.addEventListener("change", () => {
@@ -731,6 +778,15 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
         applyModules();
       });
     });
+    // 「数据同步」开关不在 MOD_GROUPS（无对应 DOM 卡片），单独接管持久化
+    const syncInput = sh.getElementById("mod-sync");
+    if (syncInput) {
+      syncInput.addEventListener("change", () => {
+        if (syncInput.checked) hiddenSet.delete(SYNC_MOD_ID);
+        else hiddenSet.add(SYNC_MOD_ID);
+        storageSet({ [MOD_KEY]: [...hiddenSet] });
+      });
+    }
   }
 
   function applyModules() {
@@ -741,6 +797,24 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
         el.classList.toggle("mod-off", hiddenSet.has(id));
       }
     }
+  }
+
+  // v3.8.0：功能按钮分组折叠（视觉分组，不影响模块管理显隐）
+  const GRP_KEY = "bossassist_ctrl_groups";
+  let grpFoldState = new Set();
+  async function initFoldGroups() {
+    const sg = await storageGet([GRP_KEY]);
+    grpFoldState = new Set(sg[GRP_KEY] || []);
+    sh.querySelectorAll("#controls .ctrl-group").forEach((g) => {
+      const id = g.getAttribute("data-group");
+      if (grpFoldState.has(id)) g.classList.add("folded");
+      const head = g.querySelector(".ctrl-group-head");
+      if (head) head.addEventListener("click", () => {
+        const folded = g.classList.toggle("folded");
+        if (folded) grpFoldState.add(id); else grpFoldState.delete(id);
+        storageSet({ [GRP_KEY]: [...grpFoldState] });
+      });
+    });
   }
 
   // 出结果场景：折叠上方「职位信息/我的简历/功能」三卡，展开结果卡并滚动到位——
@@ -814,6 +888,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
         return;
       }
       renderJob(job);
+      report("view", metaPayload(job)); // 采集点：提取到职位成功（view 不记 JD 全文）
       els.result.classList.add("hidden");
       els.historyPanel.classList.add("hidden");
     } catch (e) {
@@ -886,6 +961,138 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
     return body;
   }
 
+  // ============================== 数据同步（plan/04 §2 采集与离线队列）==============================
+  // report(event)：① 写本地 bossassist_history（沿用现有结构，离线可用）
+  //                ② 入队 bossassist_outbox（上限 500，超出丢最旧）
+  //                ③ 尝试 flush（节流：距上次 flush < 5s 跳过）
+  // flushOutbox()：成功清队列写 bossassist_last_sync；失败保留队列、静默（绝不弹错、绝不重试风暴）
+  const STORE_OUTBOX = "bossassist_outbox";
+  const STORE_LAST_SYNC = "bossassist_last_sync";
+  const SYNC_MOD_ID = "sync";      // 「数据同步」开关：隐藏列表里有 = 关（默认开）
+  const OUTBOX_MAX = 500;          // 离线队列上限，超出丢最旧
+  const FLUSH_MIN_GAP = 5000;      // 节流：距上次 flush ≥5s 才真正上报
+  let lastFlushAt = 0;
+
+  function normUrl(u) {
+    return String(u || "").split(/[?#]/)[0].replace(/\/+$/, "");
+  }
+
+  // 事件 payload 只带职位元信息：view 不记 JD 全文；analyze 按需带（服务端截断）
+  function metaPayload(job) {
+    const j = job || {};
+    return {
+      url: j.url || "",
+      title: j.title || "",
+      company: j.company || "",
+      salary: j.salary || "",
+      location: j.location || "",
+      job_tags: (j.job_tags || []).slice(0, 20),
+    };
+  }
+
+  async function report(type, payload) {
+    try {
+      const job = payload || {};
+      const urlNorm = normUrl(job.url);
+      // ① 写本地：沿用 bossassist_history 现有结构；同 url 去重替换，保留已有分析结果。
+      //    unfavorite 是用户主动删除，本地不回写（仅上报事件），否则删除立即被还原。
+      if (type !== "unfavorite") {
+        const cur = await getHistory();
+        const old = cur.find((it) => normUrl(it.url) === urlNorm);
+        const entry = {
+          t: Date.now(),
+          ts: new Date().toLocaleString(),
+          title: job.title || "未识别岗位",
+          company: job.company || "",
+          salary: job.salary || "",
+          url: job.url || "",
+          result: (old && old.result) || "",
+        };
+        await saveHistory([entry].concat(cur.filter((it) => normUrl(it.url) !== urlNorm)));
+      }
+      // 开关关掉：只写本地，直接 return（plan/04 §2）
+      const s = await storageGet([MOD_KEY]);
+      const hidden = Array.isArray(s[MOD_KEY]) ? s[MOD_KEY] : [];
+      if (hidden.indexOf(SYNC_MOD_ID) >= 0) return false;
+      // ② 入队（上限 500，超出丢最旧）；dedup_key = type:url_norm:分钟（服务端 INSERT OR IGNORE 再兜一层）
+      const at = Date.now();
+      const ev = {
+        type,
+        at,
+        payload: job,
+        dedup_key: type + ":" + (urlNorm || "na") + ":" + Math.floor(at / 60000),
+      };
+      const so = await storageGet([STORE_OUTBOX]);
+      const q = Array.isArray(so[STORE_OUTBOX]) ? so[STORE_OUTBOX] : [];
+      q.push(ev);
+      while (q.length > OUTBOX_MAX) q.shift();
+      await storageSet({ [STORE_OUTBOX]: q });
+      // ③ 节流 flush
+      if (Date.now() - lastFlushAt >= FLUSH_MIN_GAP) flushOutbox();
+      return true;
+    } catch (_) {
+      return false; // 采集绝不打扰求职主流程
+    }
+  }
+
+  async function flushOutbox() {
+    try {
+      const so = await storageGet([STORE_OUTBOX]);
+      const q = Array.isArray(so[STORE_OUTBOX]) ? so[STORE_OUTBOX] : [];
+      if (!q.length) return;
+      lastFlushAt = Date.now();
+      const resp = await apiCall("/api/events", "POST", { events: q });
+      if (resp && resp.ok) {
+        // 成功（服务端 INSERT OR IGNORE 去重视为已收）→ 清空队列，记同步时间
+        await storageSet({ [STORE_OUTBOX]: [], [STORE_LAST_SYNC]: Date.now() });
+      }
+      // 失败：保留队列静默——后端没开是常态，下次打开面板/管理页再试
+    } catch (_) { /* 静默：绝不弹错、绝不重试风暴 */ }
+  }
+
+  // 打开管理页（plan/04 §3）
+  function openDashboard() {
+    try {
+      chrome.runtime.sendMessage({ type: "OPEN_DASHBOARD" }, () => void chrome.runtime.lastError);
+    } catch (_) { /* 忽略 */ }
+  }
+
+  // analyze 采集（plan/04 §1）：带 kind、score、engine、result_md；JD 按需带（服务端截断）
+  function reportAnalyze(kind, data) {
+    try {
+      const m = (data && data.match) || {};
+      const job = collectJob();
+      const payload = Object.assign(metaPayload(job), {
+        kind,
+        score: m.score,
+        engine: m.engine || "local",
+        result_md: lastResult || "",
+        jd_text: job.jd_text || "",
+      });
+      report("analyze", payload).then((ok) => {
+        if (ok) showRecorded();
+      });
+    } catch (_) { /* 采集失败不影响分析结果 */ }
+  }
+
+  // 「已记录 · 查看管理页」一行（plan/04 §4）：分析成功上报时显示在职位卡
+  function showRecorded() {
+    try {
+      let line = sh.getElementById("recorded-line");
+      if (!line) {
+        line = document.createElement("div");
+        line.id = "recorded-line";
+        line.style.cssText = "margin:6px 0 0;color:#1a7f37;cursor:pointer;font-size:12px";
+        line.textContent = "✅ 已记录 · 查看管理页 →";
+        line.addEventListener("click", openDashboard);
+        const card = sh.getElementById("job-card");
+        if (!card) return;
+        card.appendChild(line);
+      }
+      line.style.display = "block";
+    } catch (_) { /* 忽略 */ }
+  }
+
   // ============================== 各功能 ==============================
 
   async function postJob(path) {
@@ -920,6 +1127,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
         (data.analysis_md ? data.analysis_md + "\n\n" : "") +
         `> 来源：当前页面${m.engine === "llm" ? " · 后端 LLM 评分" : ""}`
       );
+      reportAnalyze("assess", data); // 采集点：评估成功返回
     } catch (e) { showResult("❌ " + e.message); }
     finally { setBusy(false); }
   }
@@ -950,6 +1158,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
         "### 🎯 面试预测\n" +
         list(data.interview, "(未生成)")
       );
+      reportAnalyze("pack", data); // 采集点：一键分析成功返回
     } catch (e) { showResult("❌ " + e.message); }
     finally { setBusy(false); }
   }
@@ -960,6 +1169,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
     try {
       const data = await postJob("/ext/analysis");
       showResult(data.analysis_md || "(未生成)");
+      reportAnalyze("analysis", data); // 采集点：深度分析成功返回
     } catch (e) { showResult("❌ " + e.message); }
     finally { setBusy(false); }
   }
@@ -1055,6 +1265,34 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
     finally { setBusy(false); }
   }
 
+  // 关键词缺口（v3.7.0）：JD 与简历对照，本地规则 0 token
+  async function doKeyGap() {
+    setBusy(true);
+    try {
+      const job = collectJob();
+      const rs = await loadResumeState();
+      const body = { jd_text: job.jd_text || "" };
+      if (rs && rs.md) body.resume_text = rs.md;
+      const data = await callBackend("/api/keyword-gap", body);
+      const chips = (a) => (a && a.length ? a.map((x) => "**" + x + "**").join("、") : "（无）");
+      showResult([
+        "## 🧩 JD 关键词缺口",
+        "",
+        ">⚠️ 简历缺口（JD 提到、简历没写，投递前补上）：" + chips(data.missing),
+        "",
+        "> ✅ 已覆盖（JD 与简历都有）：" + chips(data.matched),
+        "",
+        "> 💡 简历亮点（JD 没提，可按需取舍）：" + chips(data.extra),
+        "",
+        "> 对照 " + data.keywords_total + " 个关键词 · JD 命中 " + (data.jd_found || []).length + " · 简历命中 " + (data.resume_found || []).length,
+      ].join("\n"));
+    } catch (e) {
+      showResult("❌ " + (e && e.message ? e.message : String(e)));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function doChat() {
     setBusy(true);
     try {
@@ -1125,6 +1363,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
       const list = await getHistory();
       list.unshift(entry);
       await saveHistory(list);
+      report("favorite", metaPayload(job)); // 采集点：收藏与本地历史双写同批（plan/04 §1）
       els.favBtn.textContent = "✓ 已收藏";
       setTimeout(() => (els.favBtn.textContent = "⭐ 收藏"), 1200);
     } catch (e) {
@@ -1151,6 +1390,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
       row.title = it.result || it.url || "";
       row.querySelector(".h-del").addEventListener("click", async (e) => {
         e.stopPropagation();
+        report("unfavorite", metaPayload(it)); // 采集点：取消收藏（本地仍删除，仅上报事件）
         const nl = await getHistory();
         nl.splice(idx, 1);
         await saveHistory(nl);
@@ -1197,6 +1437,7 @@ summary { cursor: pointer; color: #2d7bff; margin-top: 6px; }
     els.btnOptimize.addEventListener("click", doOptimize);
     els.btnGreeting.addEventListener("click", doGreeting);
     els.btnChat.addEventListener("click", doChat);
+    els.btnKeyGap.addEventListener("click", doKeyGap);
     els.copyBtn.addEventListener("click", doCopy);
     els.favBtn.addEventListener("click", doFavorite);
     els.resumePick.addEventListener("click", pickResume);

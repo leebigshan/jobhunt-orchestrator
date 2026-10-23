@@ -18,6 +18,13 @@ data/
 _smoke_*.py
 _smoke_*.js
 
+# ===== 调试 / 临时探针产物（不入库）=====
+_smoke_*.txt
+_tmp_*.db
+_live_probe.py
+_live_probe.txt
+_weekly_dump.txt
+
 # ===== 系统与编辑器 =====
 .DS_Store
 Thumbs.db

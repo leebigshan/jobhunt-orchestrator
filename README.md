@@ -57,7 +57,7 @@ python launch.py
 - Firefox：`about:debugging#/runtime/this-firefox` →「临时载入附加组件」→ 选 `browser-extension/manifest.json`。
 - Chrome：`chrome://extensions` → 开发者模式 →「加载已解压的扩展程序」→ 选 `browser-extension/` 目录。
 - 用你自己的浏览器环境打开 Boss 直聘并登录（浏览器指纹/风控由你自己的浏览器负责）。
-- **更新插件**（每次改代码后）：`chrome://extensions` 点扩展卡片「🔄 刷新」→ 职位页 **F5** → 面板底部版本角标显示 `· v3.4.1` 即生效。MV3 的 content script 不热更新，旧标签页必须刷新，角标没变就是旧代码。
+- **更新插件**（每次改代码后）：`chrome://extensions` 点扩展卡片「🔄 刷新」→ 职位页 **F5** → 面板底部版本角标显示 `· v3.8.0` 即生效。MV3 的 content script 不热更新，旧标签页必须刷新，角标没变就是旧代码。
 
 ### 3. 使用
 
@@ -93,6 +93,11 @@ Boss 职位详情页 → 点工具栏「Boss 求职辅助」图标 → **右侧�
 | 🧠 **HR 话术** | 粘贴 HR 消息 → 多语气回复候选 |
 | 📋 **复制结果** | 一键复制到剪贴板 |
 | ⭐ **收藏 / 🕘 历史** | 本地保存分析结果，随时回看 |
+| 🗂 **管理页（v3.5.0）** | 独立标签页管理中枢：概览统计 / 职位管理 / 申请记录 / 设置，数据落本地 SQLite（`data/jobtrack.db`），详见 [扩展说明](browser-extension/README.md) |
+| ☁ **数据同步（v3.5.0）** | 浏览/分析/收藏事件静默同步到管理页；离线排队（≤500 条）自动补传、绝不弹错；「模块管理」可关 |
+| 📌 **求职行动闭环（v3.6.0）** | 跟进提醒（停滞 ≥7 天申请自动浮出 +「📌 记录跟进」重置时钟）/ 求职周报（近 7 天 Markdown 复盘一键导出）/ 简历导出（Markdown + 打印版 HTML）；**本次未改 `/ext` 接口，不抓取站点数据、不自动投递** |
+| 🧩 **JD 关键词缺口 + 💰 薪酬对比（v3.7.0）** | 零 token 本地规则：JD 与简历对照出「⚠️ 简历缺口 / ✅ 已覆盖 / 💡 简历亮点」，词典内置 ~75 词 + 设置页可编辑；概览新增薪酬区间横向条形对比（解析 `15k-25k`/`14薪`/`1-2万`，面议剔除）；**未改 `/ext`，不抓取、不自动投递** |
+| 🎨 **现代简约 UI 重构（v3.8.0）** | 管理页与侧边栏统一一套 Design Token（白底 / 圆角 12px / 双层柔和阴影 / 微交互）；概览卡加图标 + 强调色、卡片 hover 上浮；侧边栏 13 个功能按钮按「一键&评估 / 深度分析 / 求职动作」分组可折叠（折叠状态本地记忆，独立于模块开关）；趋势与评分分布图加网格线 + Y 轴刻度 + 悬停 tooltip；**纯视觉重构，不改动 `/ext` 接口与业务逻辑** |
 | ⚙ **设置后端地址** | 默认 `http://127.0.0.1:8000` |
 
 ## 🖼 案例展示
@@ -109,15 +114,19 @@ Boss 职位详情页 → 点工具栏「Boss 求职辅助」图标 → **右侧�
 launch.py                    一键启动后端（不操作浏览器）
 web/app.py                   FastAPI 入口（/info、/health + 挂载 /ext）
 web/ext_api.py               浏览器扩展后端路由（/ext/*）
+web/db.py                    管理页 SQLite 数据底座（五表 + 状态机 + 事件去重，v3.5.0）
+web/admin_api.py             管理页 REST API（/api/*：统计/职位/申请/事件/设置/导入导出/周报/简历导出/关键词缺口/薪酬对比，v3.7.0）
 web/__main__.py              python -m web 启动
 tools/config.py              配置加载 + 默认值
 tools/llm_client.py          多 provider LLM 客户端（retry / JSON 解析）
 tools/scoring.py             本地规则评分（score_local，LLM 评分失败时兜底）
 tools/salary_utils.py        薪资解析 / 达标判断 / 质量分
+tools/keyword_utils.py       关键词缺口零 token 规则引擎（内置词典 + 自定义，v3.7.0）
 tools/resume_parser.py       简历事实抽取 + 完整性保护 + 导出
 data/base_resume.md          基础简历文件（插件未上传简历时简历优化读取，可选）
+data/jobtrack.db             管理页本地数据库（自动生成，已 .gitignore，v3.5.0）
 config.yaml                  用户偏好 + LLM 配置
-browser-extension/           浏览器扩展（MV3，右侧常驻侧边栏，用户自行加载）
+browser-extension/           浏览器扩展（MV3，右侧常驻侧边栏 + 🗂 管理页，用户自行加载）
 ```
 
 ## ⚙️ 关键配置（config.yaml）

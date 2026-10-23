@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<!-- 管理页面（options_ui，open_in_tab）—— 布局按 public/finally.png：概览/职位管理/申请记录/设置 -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>求职管理 · BOSS 求职辅助</title>
+<link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <!-- 顶栏：标题 + 后端状态点 + 同步 + 版本 -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1 class="top-title">🗂 求职管理</h1>
+      <nav class="tabs" id="tabs">
+        <a href="#/overview" data-tab="overview">概览</a>
+        <a href="#/jobs" data-tab="jobs">职位管理</a>
+        <a href="#/applications" data-tab="applications">申请记录</a>
+        <a href="#/settings" data-tab="settings">设置</a>
+      </nav>
+      <div class="top-right">
+        <span class="backend-state" id="backend-state">
+          <span class="dot" id="backend-dot"></span>
+          <span id="backend-label">连接中…</span>
+        </span>
+        <button class="btn ghost" id="btn-weekly" title="导出近 7 天求职周报（Markdown）">📊 周报</button>
+        <button class="btn ghost" id="btn-sync" title="补传离线数据并刷新">↻ 同步</button>
+        <span class="version">v3.7.0</span>
+      </div>
+    </div>
+    <!-- 后端不可达：黄条本地模式，页面永不白屏（T10） -->
+    <div class="local-banner" id="local-banner" hidden>
+      ⚠️ 本地模式：后端未连接（<code id="local-base"></code>）。以下为 chrome.storage 本地数据，功能受限；后端启动后点「↻ 同步」补传。
+    </div>
+  </header>
+
+  <main class="page">
+    <!-- 概览 -->
+    <section class="tab-page" id="page-overview">
+      <div class="cards" id="ov-cards">
+        <div class="card stat"><div class="stat-label"><span class="ico">🔍</span>浏览职位</div><div class="stat-value mono accent" id="ov-jobs">—</div></div>
+        <div class="card stat"><div class="stat-label"><span class="ico">📊</span>已分析</div><div class="stat-value mono" id="ov-analyzed">—</div></div>
+        <div class="card stat"><div class="stat-label"><span class="ico">📨</span>已投递</div><div class="stat-value mono" id="ov-applied">—</div></div>
+        <div class="card stat"><div class="stat-label"><span class="ico">💬</span>回复率</div><div class="stat-value mono" id="ov-reply">—</div></div>
+        <div class="card stat"><div class="stat-label"><span class="ico">🎯</span>面试率</div><div class="stat-value mono" id="ov-interview">—</div></div>
+        <div class="card stat"><div class="stat-label"><span class="ico">✨</span>平均匹配度</div><div class="stat-value mono accent" id="ov-score">—</div></div>
+        <div class="card stat"><div class="stat-label" title="非终态申请超过 7 天无新动态"><span class="ico">⏳</span>待跟进</div><div class="stat-value mono" id="ov-followups">—</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <h2>近 30 天趋势</h2>
+          <div class="chart-box" id="ov-trend"><div class="state">加载中…</div></div>
+          <div class="legend"><span class="lg views">■ 浏览</span><span class="lg applies">■ 投递</span></div>
+        </div>
+        <div class="card">
+          <h2>匹配度分布</h2>
+          <div class="chart-box" id="ov-dist"><div class="state">加载中…</div></div>
+          <div class="hint">点柱子按分数段筛选职位</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>💰 薪酬区间对比 <span class="hint">（近 30 天浏览 + 全部收藏 · 单位 K/月）</span></h2>
+        <div id="ov-salary"><div class="state">加载中…</div></div>
+      </div>
+      <div class="card">
+        <h2>最近动态</h2>
+        <ul class="event-list" id="ov-recent"><li class="state">加载中…</li></ul>
+      </div>
+    </section>
+
+    <!-- 职位管理 -->
+    <section class="tab-page" id="page-jobs" hidden>
+      <div class="card toolbar" id="jobs-toolbar">
+        <input type="search" id="f-q" placeholder="搜职位 / 公司 / JD…">
+        <select id="f-status">
+          <option value="">全部状态</option>
+          <option value="viewed">已查看</option>
+          <option value="applied">已投递</option>
+          <option value="read">已读</option>
+          <option value="interview">面试中</option>
+          <option value="offer">Offer</option>
+          <option value="rejected">已拒绝</option>
+          <option value="archived">已归档</option>
+        </select>
+        <input type="number" id="f-min-score" placeholder="分数≥" min="0" max="100" class="num">
+        <input type="number" id="f-max-score" placeholder="分数≤" min="0" max="100" class="num">
+        <input type="number" id="f-min-salary" placeholder="月薪≥(元)" min="0" class="num">
+        <label class="chk"><input type="checkbox" id="f-fav"> 只看收藏</label>
+        <select id="f-sort">
+          <option value="last_seen">最近活跃</option>
+          <option value="score">匹配度</option>
+          <option value="applied">最近投递</option>
+        </select>
+        <button class="btn primary" id="btn-add-job">+ 手动添加</button>
+      </div>
+      <div class="card">
+        <div class="bulk-bar" id="bulk-bar" hidden>
+          已选 <b id="bulk-count">0</b> 条
+          <button class="btn" id="bulk-archive">批量归档</button>
+          <button class="btn" id="bulk-delete">批量删除</button>
+        </div>
+        <div class="table-wrap" id="jobs-table-wrap">
+          <table class="jobs-table" id="jobs-table">
+            <thead>
+              <tr>
+                <th><input type="checkbox" id="check-all"></th>
+                <th>职位</th><th>公司</th><th>薪资</th><th>匹配度</th><th>状态</th><th>最近活跃</th>
+              </tr>
+            </thead>
+            <tbody id="jobs-tbody"></tbody>
+          </table>
+          <div class="state" id="jobs-state">加载中…</div>
+        </div>
+        <div class="pager" id="jobs-pager"></div>
+      </div>
+      <!-- 详情抽屉 -->
+      <div class="drawer-mask" id="drawer-mask" hidden></div>
+      <aside class="drawer" id="job-drawer" hidden>
+        <div class="drawer-head">
+          <h2 id="dw-title">职位详情</h2>
+          <button class="btn ghost" id="dw-close">✕</button>
+        </div>
+        <div class="drawer-body" id="dw-body"><div class="state">加载中…</div></div>
+      </aside>
+    </section>
+
+    <!-- 申请记录 -->
+    <section class="tab-page" id="page-applications" hidden>
+      <div class="card">
+        <h2>投递漏斗</h2>
+        <div id="funnel"></div>
+      </div>
+      <div class="card toolbar">
+        <select id="a-stage">
+          <option value="all">全部阶段</option>
+          <option value="applied">已投递</option>
+          <option value="read">已读</option>
+          <option value="interview">面试中</option>
+          <option value="offer">Offer</option>
+          <option value="rejected">已拒绝</option>
+        </select>
+        <button class="btn primary" id="btn-add-app">+ 新增投递</button>
+      </div>
+      <div id="app-timeline"></div>
+    </section>
+
+    <!-- 设置 -->
+    <section class="tab-page" id="page-settings" hidden>
+      <div class="card">
+        <h2>连接</h2>
+        <div class="form-row">
+          <label>后端地址</label>
+          <input type="text" id="s-base" placeholder="http://127.0.0.1:8000">
+          <button class="btn" id="s-test">测试连接</button>
+          <span id="s-test-result"></span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>求职偏好 <span class="hint">（写入 config.yaml，含 .bak 备份；失败自动回滚）</span></h2>
+        <div class="form-row"><label>姓名</label><input type="text" id="s-name"></div>
+        <div class="form-row"><label>关键词</label><input type="text" id="s-keywords" placeholder="逗号分隔"></div>
+        <div class="form-row"><label>期望薪资下限</label><input type="text" id="s-salary-min" placeholder="如 20000"></div>
+        <div class="form-row"><label>目标岗位</label><input type="text" id="s-roles" placeholder="逗号分隔"></div>
+        <div class="form-row"><label>技能要求</label><input type="text" id="s-skills" placeholder="逗号分隔"></div>
+        <div class="form-row"><label></label><button class="btn primary" id="s-save-prefs">保存偏好</button></div>
+      </div>
+      <div class="card">
+        <h2>简历管理</h2>
+        <div class="form-row">
+          <label>上传 .md</label>
+          <input type="file" id="s-resume-file" accept=".md,text/markdown">
+          <input type="text" id="s-resume-name" placeholder="版本名称">
+          <button class="btn" id="s-resume-save">保存版本</button>
+        </div>
+        <div id="resume-list"></div>
+        <div class="resume-preview" id="resume-preview"></div>
+      </div>
+      <div class="card">
+        <h2>🎯 技能词典 <span class="hint">（JD 关键词缺口对照用；每行一个，与内置词典自动合并去重）</span></h2>
+        <div class="form-row">
+          <textarea id="s-dict" rows="5" placeholder="Kafka&#10;微服务&#10;（留空 = 只用内置词典）"></textarea>
+        </div>
+        <div class="form-row"><label></label><button class="btn primary" id="s-dict-save">保存词典</button><span id="s-dict-result"></span></div>
+      </div>
+      <div class="card">
+        <h2>分析配置 <span class="hint">（只读；API Key 只存后端 config.yaml）</span></h2>
+        <div id="llm-info" class="mono">加载中…</div>
+      </div>
+      <div class="card">
+        <h2>数据</h2>
+        <div class="btn-row">
+          <button class="btn" id="btn-export-json">导出 JSON</button>
+          <button class="btn" id="btn-export-csv">导出 CSV</button>
+          <button class="btn" id="btn-import">导入备份</button>
+          <button class="btn" id="btn-import-history">导入旧版历史</button>
+          <button class="btn danger" id="btn-clear">清空数据</button>
+          <input type="file" id="import-file" hidden>
+        </div>
+        <div class="form-row" id="clear-confirm-row" hidden>
+          <label>输入「清空」确认</label>
+          <input type="text" id="clear-confirm-text" placeholder="清空">
+          <button class="btn danger" id="clear-confirm-btn">确认清空</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>关于</h2>
+        <p class="hint">BOSS 求职辅助 · 管理页面 v3.7.0 —— 本工具不抓取站点数据、不自动投递，仅记录你在本插件中的浏览与分析行为（plan R7 声明）。</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="md.js"></script>
+  <script src="store.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
